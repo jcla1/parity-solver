@@ -1,3 +1,5 @@
+-- This is a representation & solver for the recent "Parity" game.
+-- It finds the optimal path through the puzzle via an A* graph search.
 import Control.Applicative
 import Control.Lens
 import Data.Graph.AStar
