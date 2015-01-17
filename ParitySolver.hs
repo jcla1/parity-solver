@@ -5,6 +5,7 @@
 module ParitySolver where
 
 import Control.Applicative
+import Control.Arrow
 import Control.Lens
 import Data.Graph.AStar
 import Data.List.Split
@@ -60,11 +61,11 @@ convertPosToIndex :: Dimensions -> Position -> Int
 convertPosToIndex (_, dimY) (x, y) = y * dimY + x
 
 updatePosition :: Dimensions -> Direction -> Position -> Maybe Position
-updatePosition dim dir (x, y) = validatePosition dim $ case dir of
-    U -> (x, y-1)
-    D -> (x, y+1)
-    L -> (x-1, y)
-    R -> (x+1, y)
+updatePosition dim dir = validatePosition dim . case dir of
+    U -> second (subtract 1)
+    D -> second (+1)
+    L -> first (subtract 1)
+    R -> first (+1)
 
 validatePosition :: Dimensions -> Position -> Maybe Position
 validatePosition (dimX, dimY) (x, y)
