@@ -2,9 +2,12 @@
 -- It finds the optimal path through the puzzle via an A* graph search.
 -- You can find the game here: http://www.abefehr.com/parity/
 -- Feedback would be greatly appreciated!
+module ParitySolver where
+
 import Control.Applicative
 import Control.Lens
 import Data.Graph.AStar
+import Data.List.Split
 import Data.Maybe
 import qualified Data.Set as S
 
@@ -25,10 +28,7 @@ data Board = Board {
                    } deriving (Eq, Ord)
 
 instance Show Board where
-    show (Board (_, y) xs) = lineToStr xs
-      where
-        lineToStr [] = ""
-        lineToStr xs = (show $ take y xs) ++ "\n" ++ lineToStr (drop y xs)
+    show (Board (_, y) xs) = unlines . map show $ chunksOf y xs
 
 data GameState = GameState {
                             position :: Position
@@ -36,7 +36,7 @@ data GameState = GameState {
                             } deriving (Show, Eq, Ord)
 
 hasGameEnded :: GameState -> Bool
-hasGameEnded (GameState _ (Board _ xs)) = and $ map (== head xs) (tail xs)
+hasGameEnded (GameState _ (Board _ xs)) = all (== head xs) (tail xs)
 
 validBoard :: Board -> Bool
 validBoard (Board (dimX, dimY) fields) = dimX*dimY  == length fields
@@ -75,12 +75,11 @@ findNeighbours :: GameState -> [GameState]
 findNeighbours gs = catMaybes $ applyDirection <$> [U .. R] <*> [gs]
 
 findCompletionPath :: GameState -> Maybe [GameState]
-findCompletionPath gs =
+findCompletionPath =
     aStar (S.fromList . findNeighbours)
           (const . const 1)
           (const 0)
           hasGameEnded
-          gs
 
 main :: IO ()
 main = print . fromJust $ findCompletionPath gs
