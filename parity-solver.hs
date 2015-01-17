@@ -83,7 +83,7 @@ findCompletionPath gs =
           gs
 
 main :: IO ()
-main = putStrLn $ findCompletionPath gs
+main = print . fromJust $ findCompletionPath gs
   where
     -- This GameState represents the 4th level of Parity
     -- http://www.abefehr.com/parity/
