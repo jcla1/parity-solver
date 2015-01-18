@@ -15,6 +15,6 @@ main = do
     let levels = map fromLevel . fromJust $ decode fc
     let findPath gs = findChoosenPath . liftA2 (:) (pure gs) $ findCompletionPath gs
 
---    print . findPath $ levels !! 5
+--    print . findPath $ levels !! 12
 
     print . mapM_ findPath $ take 50 levels

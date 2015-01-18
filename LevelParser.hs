@@ -22,8 +22,8 @@ data Level = Level { getType :: String
                      , getSolution :: Maybe [Direction]
                      } deriving (Show)
 
-fromLevel :: Level -> GameState
-fromLevel l = GameState (getInitialPos l) (Board (3,3) (board l))
+fromLevel :: Level -> GameState StdBoard
+fromLevel l = GameState (getInitialPos l) (StdBoard (board l))
 
 instance FromJSON Level where
     parseJSON (Object v) = Level
