@@ -1,19 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- Adapted from:
--- http://blog.raynes.me/blog/2012/11/27/easy-json-parsing-in-haskell-with-aeson/
 module LevelParser where
+
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad (liftM)
-import qualified Data.ByteString.Lazy.Char8 as BS
 import qualified Data.HashMap.Strict as HM
-import Data.Maybe
+import Data.Maybe (fromJust)
 import Data.Scientific (coefficient)
 import qualified Data.Text as T
 import qualified Data.Vector as V
-import Debug.Trace
 
-import Data.Aeson ((.:), (.:?), decode, FromJSON(..), Value(..))
+import Data.Aeson ((.:), (.:?), FromJSON(..), Value(..))
 
 import ParitySolver
 
