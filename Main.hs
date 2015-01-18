@@ -1,9 +1,9 @@
 module Main where
-import Data.Maybe
+import Control.Monad
 import ParitySolver
 
 main :: IO ()
-main = print . fromJust $ findCompletionPath gs
+main = print . findChoosenPath . liftM2 (:) (return gs) $ findCompletionPath gs
   where
     -- This GameState represents the 4th level of Parity
     -- http://www.abefehr.com/parity/

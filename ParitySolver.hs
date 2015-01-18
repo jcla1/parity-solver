@@ -60,6 +60,13 @@ updateBoard pos board =
 convertPosToIndex :: Dimensions -> Position -> Int
 convertPosToIndex (_, dimY) (x, y) = y * dimY + x
 
+findUsedDirection :: Position -> Position -> Direction
+findUsedDirection (x1, y1) (x2, y2) = case (x1-x2, y1-y2) of
+    (0, 1) -> U
+    (0, -1) -> D
+    (1, 0) -> L
+    (-1, 0) -> R
+
 updatePosition :: Dimensions -> Direction -> Position -> Maybe Position
 updatePosition dim dir = validatePosition dim . case dir of
     U -> second (subtract 1)
@@ -82,3 +89,10 @@ findCompletionPath =
           (const 0)
           hasGameEnded
 
+-- For this function to work properly, you need to have the initial
+-- GameState prepended.
+findChoosenPath :: Maybe [GameState] -> Maybe [Direction]
+findChoosenPath Nothing = Nothing
+findChoosenPath (Just gs) = Just $ zipWith findUsedDirection ps (tail ps)
+  where
+    ps = map position gs
