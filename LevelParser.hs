@@ -22,6 +22,9 @@ data Level = Level { getType :: String
                      , getSolution :: Maybe [Direction]
                      } deriving (Show)
 
+fromLevel :: Level -> GameState
+fromLevel l = GameState (getInitialPos l) (Board (3,3) (getBoard l))
+
 instance FromJSON Level where
     parseJSON (Object v) = Level
                            <$> v .: "type"
