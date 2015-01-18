@@ -12,10 +12,9 @@ import ParitySolver
 main :: IO ()
 main = do
     fc <- BS.readFile "story.json"
-    let levels = fromJust (decode fc :: Maybe [Level])
-    let findPath = findChoosenPath . findCompletionPath . fromLevel
+    let levels = map fromLevel . fromJust $ decode fc
+    let findPath gs = findChoosenPath . liftA2 (:) (pure gs) $ findCompletionPath gs
 
---    let l = (!!) <$> levels <*> pure 5
---    print $ findPath l
+--    print . findPath $ levels !! 5
 
-    print $ mapM_ findPath $ take 50 levels
+    print . mapM_ findPath $ take 50 levels
