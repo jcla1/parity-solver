@@ -90,8 +90,9 @@ findCompletionPath =
           hasGameEnded
 
 boardHeuristic :: GameState -> Int
-boardHeuristic gs = negate . sum $ map (subtract (maximum fields)) fields
+boardHeuristic gs = negate . sum $ map diffFn fields
   where
+    diffFn = subtract $ maximum fields
     fields = getFields $ getBoard gs
 
 -- For this function to work properly, you need to have the initial
