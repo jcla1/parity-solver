@@ -48,8 +48,7 @@ instance Board StdBoard where
 
 instance Show StdBoard where
     show b@(StdBoard xs) = unlines . map show $ chunksOf y xs
-      where
-        (_,y) = getDimensions b
+      where (_,y) = getDimensions b
 
 data GameState a = GameState {
                             position :: Position
@@ -92,16 +91,14 @@ findNeighbours :: Board a => GameState a -> [GameState a]
 findNeighbours gs = catMaybes $ applyDirection <$> [U .. R] <*> [gs]
 
 findCompletionPath :: (Ord a, Board a) => GameState a -> Maybe [GameState a]
-findCompletionPath =
-    aStar (S.fromList . findNeighbours)
-          (const . const 1)
-          (boardHeuristic . getBoard)
-          (hasGameEnded . getBoard)
+findCompletionPath gs = liftA2 (:) (pure gs)
+    $ aStar (S.fromList . findNeighbours)
+            (const . const 1)
+            (boardHeuristic . getBoard)
+            (hasGameEnded . getBoard)
+            gs
 
--- For this function to work properly, you need to have the initial
--- GameState prepended.
 findChoosenPath :: Maybe [GameState a] -> Maybe [Direction]
 findChoosenPath Nothing = Nothing
 findChoosenPath (Just gs) = Just $ zipWith findUsedDirection ps (tail ps)
-  where
-    ps = map position gs
+  where ps = map position gs

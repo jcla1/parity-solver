@@ -13,7 +13,7 @@ main :: IO ()
 main = do
     fc <- BS.readFile "story.json"
     let levels = map fromLevel . fromJust $ decode fc
-    let findPath gs = findChoosenPath . liftA2 (:) (pure gs) $ findCompletionPath gs
+    let findPath gs = findChoosenPath $ findCompletionPath gs
 
 --    print . findPath $ levels !! 12
 
