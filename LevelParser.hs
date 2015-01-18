@@ -17,13 +17,13 @@ import ParitySolver
 data Level = Level { getType :: String
                      , getID :: Int
                      , getMode :: String
-                     , getBoard :: [Int]
+                     , board :: [Int]
                      , getInitialPos :: Position
                      , getSolution :: Maybe [Direction]
                      } deriving (Show)
 
 fromLevel :: Level -> GameState
-fromLevel l = GameState (getInitialPos l) (Board (3,3) (getBoard l))
+fromLevel l = GameState (getInitialPos l) (Board (3,3) (board l))
 
 instance FromJSON Level where
     parseJSON (Object v) = Level

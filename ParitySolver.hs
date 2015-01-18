@@ -24,8 +24,8 @@ type Dimensions = (Int, Int)
 
 -- The data runs in rows
 data Board = Board {
-                   dimensions :: Dimensions
-                   , fields :: [Int]
+                   getDimensions :: Dimensions
+                   , getFields :: [Int]
                    } deriving (Eq, Ord)
 
 instance Show Board where
@@ -33,7 +33,7 @@ instance Show Board where
 
 data GameState = GameState {
                             position :: Position
-                            , board :: Board
+                            , getBoard :: Board
                             } deriving (Show, Eq, Ord)
 
 hasGameEnded :: GameState -> Bool
@@ -44,18 +44,18 @@ validBoard (Board (dimX, dimY) fields) = dimX*dimY == length fields
 
 applyDirection :: Direction -> GameState -> Maybe GameState
 applyDirection dir (GameState pos board) = do
-    newPos <- updatePosition (dimensions board) dir pos
+    newPos <- updatePosition (getDimensions board) dir pos
     let newBoard = updateBoard newPos board
     return $ GameState newPos newBoard
 
 updateBoard :: Position -> Board -> Board
 updateBoard pos board =
-    board { fields = bumpVal $ fields board }
+    board { getFields = bumpVal $ getFields board }
   where
     -- TODO: Surely, there must be a better way to do this
     --       than using a lens.
     bumpVal = (& element idx +~ 1)
-    idx = convertPosToIndex (dimensions board) pos
+    idx = convertPosToIndex (getDimensions board) pos
 
 convertPosToIndex :: Dimensions -> Position -> Int
 convertPosToIndex (_, dimY) (x, y) = y * dimY + x
@@ -86,8 +86,13 @@ findCompletionPath :: GameState -> Maybe [GameState]
 findCompletionPath =
     aStar (S.fromList . findNeighbours)
           (const . const 1)
-          (const 0)
+          boardHeuristic
           hasGameEnded
+
+boardHeuristic :: GameState -> Int
+boardHeuristic gs = negate . sum $ map (subtract (maximum fields)) fields
+  where
+    fields = getFields $ getBoard gs
 
 -- For this function to work properly, you need to have the initial
 -- GameState prepended.
