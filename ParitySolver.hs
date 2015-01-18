@@ -22,40 +22,49 @@ data Color = White | Black
 type Position = (Int, Int)
 type Dimensions = (Int, Int)
 
+class Board a where
+    getDimensions :: a -> Dimensions
+    hasGameEnded :: a -> Bool
+    boardHeuristic :: a -> Int
+    updateBoard :: Position -> a -> a
+
 -- The data runs in rows
-data Board = Board {
-                   getDimensions :: Dimensions
-                   , getFields :: [Int]
-                   } deriving (Eq, Ord)
+data StdBoard = StdBoard { getFields :: [Int] } deriving (Eq, Ord)
 
-instance Show Board where
-    show (Board (_, y) xs) = unlines . map show $ chunksOf y xs
+instance Board StdBoard where
+    getDimensions _ = (3,3)
+    hasGameEnded (StdBoard (x:xs)) = all (==x) xs
+    boardHeuristic b = negate . sum $ map diffFn fields
+      where
+        diffFn = subtract $ maximum fields
+        fields = getFields b
+    updateBoard pos board =
+        board { getFields = bumpVal $ getFields board }
+      where
+        -- TODO: Surely, there must be a better way to do this
+        --       than using a lens.
+        bumpVal = (& element idx +~ 1)
+        idx = convertPosToIndex (getDimensions board) pos
 
-data GameState = GameState {
+instance Show StdBoard where
+    show b@(StdBoard xs) = unlines . map show $ chunksOf y xs
+      where
+        (_,y) = getDimensions b
+
+data GameState a = GameState {
                             position :: Position
-                            , getBoard :: Board
+                            , getBoard :: a
                             } deriving (Show, Eq, Ord)
 
-hasGameEnded :: GameState -> Bool
-hasGameEnded (GameState _ (Board _ (x:xs))) = all (==x) xs
 
-validBoard :: Board -> Bool
-validBoard (Board (dimX, dimY) fields) = dimX*dimY == length fields
+--validBoard :: Board -> Bool
+--validBoard (Board (dimX, dimY) fields) = dimX*dimY == length fields
 
-applyDirection :: Direction -> GameState -> Maybe GameState
+applyDirection :: Board a => Direction -> GameState a -> Maybe (GameState a)
 applyDirection dir (GameState pos board) = do
     newPos <- updatePosition (getDimensions board) dir pos
     let newBoard = updateBoard newPos board
     return $ GameState newPos newBoard
-
-updateBoard :: Position -> Board -> Board
-updateBoard pos board =
-    board { getFields = bumpVal $ getFields board }
-  where
-    -- TODO: Surely, there must be a better way to do this
-    --       than using a lens.
-    bumpVal = (& element idx +~ 1)
-    idx = convertPosToIndex (getDimensions board) pos
 
 convertPosToIndex :: Dimensions -> Position -> Int
 convertPosToIndex (_, dimY) (x, y) = y * dimY + x
@@ -79,25 +88,19 @@ validatePosition (dimX, dimY) (x, y)
     | x < 0 || x >= dimX || y < 0 || y >= dimY= Nothing
     | otherwise = Just (x, y)
 
-findNeighbours :: GameState -> [GameState]
+findNeighbours :: Board a => GameState a -> [GameState a]
 findNeighbours gs = catMaybes $ applyDirection <$> [U .. R] <*> [gs]
 
-findCompletionPath :: GameState -> Maybe [GameState]
+findCompletionPath :: (Ord a, Board a) => GameState a -> Maybe [GameState a]
 findCompletionPath =
     aStar (S.fromList . findNeighbours)
           (const . const 1)
-          boardHeuristic
-          hasGameEnded
-
-boardHeuristic :: GameState -> Int
-boardHeuristic gs = negate . sum $ map diffFn fields
-  where
-    diffFn = subtract $ maximum fields
-    fields = getFields $ getBoard gs
+          (boardHeuristic . getBoard)
+          (hasGameEnded . getBoard)
 
 -- For this function to work properly, you need to have the initial
 -- GameState prepended.
-findChoosenPath :: Maybe [GameState] -> Maybe [Direction]
+findChoosenPath :: Maybe [GameState a] -> Maybe [Direction]
 findChoosenPath Nothing = Nothing
 findChoosenPath (Just gs) = Just $ zipWith findUsedDirection ps (tail ps)
   where
