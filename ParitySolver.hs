@@ -16,7 +16,7 @@ data Direction = U | D | L | R
     deriving (Show, Read, Eq, Enum)
 
 data Color = White | Black
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Ord)
 
 -- (0, 0) is the top left of the board
 type Position = (Int, Int)
@@ -25,21 +25,23 @@ type Dimensions = (Int, Int)
 class Board a where
     getDimensions :: a -> Dimensions
     hasGameEnded :: a -> Bool
-    boardHeuristic :: a -> Int
+    getFields :: a -> [Int]
     updateBoard :: Position -> a -> a
-
--- The data runs in rows
-data StdBoard = StdBoard { getFields :: [Int] } deriving (Eq, Ord)
-
-instance Board StdBoard where
-    getDimensions _ = (3,3)
-    hasGameEnded (StdBoard (x:xs)) = all (==x) xs
+    boardHeuristic :: a -> Int
     boardHeuristic b = negate . sum $ map diffFn fields
       where
         diffFn = subtract $ maximum fields
         fields = getFields b
+
+-- The data runs in rows
+data StdBoard = StdBoard { _stdFields :: [Int] } deriving (Eq, Ord)
+
+instance Board StdBoard where
+    getDimensions _ = (3,3)
+    hasGameEnded (StdBoard (x:xs)) = all (==x) xs
+    getFields = _stdFields
     updateBoard pos board =
-        board { getFields = bumpVal $ getFields board }
+        board { _stdFields = bumpVal $ getFields board }
       where
         -- TODO: Surely, there must be a better way to do this
         --       than using a lens.
@@ -50,14 +52,26 @@ instance Show StdBoard where
     show b@(StdBoard xs) = unlines . map show $ chunksOf y xs
       where (_,y) = getDimensions b
 
-data GameState a = GameState {
-                            position :: Position
-                            , getBoard :: a
-                            } deriving (Show, Eq, Ord)
+data BWBoard = BWBoard { getColors :: [Color]
+                       , _bwFields :: [Int]
+                       } deriving (Eq, Ord)
+
+instance Board BWBoard where
+    getDimensions _ = (3,3)
+    hasGameEnded (BWBoard _ (x:xs)) = all (==x) xs
+    getFields = _bwFields
+    updateBoard pos board =
+        board { _bwFields = bumpVal $ getFields board }
+      where
+        bumpVal = case getColors board !! idx of
+            White -> (& element idx +~ 1)
+            Black -> (& element idx -~ 1)
+        idx = convertPosToIndex (getDimensions board) pos
 
 
---validBoard :: Board -> Bool
---validBoard (Board (dimX, dimY) fields) = dimX*dimY == length fields
+data GameState a = GameState { position :: Position
+                             , getBoard :: a
+                             } deriving (Show, Eq, Ord)
 
 applyDirection :: Board a => Direction -> GameState a -> Maybe (GameState a)
 applyDirection dir (GameState pos board) = do
