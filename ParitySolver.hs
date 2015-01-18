@@ -37,7 +37,7 @@ data GameState = GameState {
                             } deriving (Show, Eq, Ord)
 
 hasGameEnded :: GameState -> Bool
-hasGameEnded (GameState _ (Board _ xs)) = all (== head xs) (tail xs)
+hasGameEnded (GameState _ (Board _ (x:xs))) = all (==x) xs
 
 validBoard :: Board -> Bool
 validBoard (Board (dimX, dimY) fields) = dimX*dimY  == length fields
@@ -82,9 +82,3 @@ findCompletionPath =
           (const 0)
           hasGameEnded
 
-main :: IO ()
-main = print . fromJust $ findCompletionPath gs
-  where
-    -- This GameState represents the 4th level of Parity
-    -- http://www.abefehr.com/parity/
-    gs = GameState (0,0) (Board (3,3) [3,4,3,1,3,2,1,1,2])
