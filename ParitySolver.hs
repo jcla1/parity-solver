@@ -40,7 +40,7 @@ hasGameEnded :: GameState -> Bool
 hasGameEnded (GameState _ (Board _ (x:xs))) = all (==x) xs
 
 validBoard :: Board -> Bool
-validBoard (Board (dimX, dimY) fields) = dimX*dimY  == length fields
+validBoard (Board (dimX, dimY) fields) = dimX*dimY == length fields
 
 applyDirection :: Direction -> GameState -> Maybe GameState
 applyDirection dir (GameState pos board) = do
