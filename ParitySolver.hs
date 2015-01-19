@@ -5,7 +5,6 @@
 module ParitySolver where
 
 import Control.Applicative
-import Control.Arrow
 import Control.Lens
 import Data.Graph.AStar
 import Data.List.Split
@@ -82,10 +81,10 @@ findUsedDirection (x1, y1) (x2, y2) = case (x1-x2, y1-y2) of
 
 updatePosition :: Dimensions -> Direction -> Position -> Maybe Position
 updatePosition dim dir = validatePosition dim . case dir of
-    U -> second (subtract 1)
-    D -> second (+1)
-    L -> first (subtract 1)
-    R -> first (+1)
+    U -> (& _2 -~ 1)
+    D -> (& _2 +~ 1)
+    L -> (& _1 -~ 1)
+    R -> (& _1 +~ 1)
 
 validatePosition :: Dimensions -> Position -> Maybe Position
 validatePosition (dimX, dimY) (x, y)
