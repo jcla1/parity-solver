@@ -23,12 +23,11 @@ data Level = Level { getType :: String
                      , getSolution :: Maybe [Direction]
                      } deriving (Show)
 
-fromLevel :: Board a => Level -> GameState a
+fromLevel :: Level -> GameState
 fromLevel l = GameState (getInitialPos l) b
   where
-    b :: Board a => a
     b = case getMode l of
-        --"b&w" -> BWBoard (fromJust $ getColors l) (getBoard l)
+        "b&w" -> BWBoard (fromJust $ getColors l) (getBoard l)
         "vanilla" -> StdBoard (getBoard l)
 
 instance FromJSON Level where

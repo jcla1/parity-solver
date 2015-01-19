@@ -13,7 +13,7 @@ import Data.Maybe
 import qualified Data.Set as S
 
 data Direction = U | D | L | R
-    deriving (Show, Read, Eq, Enum)
+    deriving (Show, Read, Eq, Ord, Enum)
 
 data Color = W | B
     deriving (Show, Read, Eq, Ord)
@@ -22,58 +22,49 @@ data Color = W | B
 type Position = (Int, Int)
 type Dimensions = (Int, Int)
 
-class Board a where
-    getDimensions :: a -> Dimensions
-    hasGameEnded :: a -> Bool
-    getFields :: a -> [Int]
-    updateBoard :: Position -> a -> a
-    boardHeuristic :: a -> Int
-    boardHeuristic b = negate . sum $ map diffFn fields
-      where
-        diffFn = subtract $ maximum fields
-        fields = getFields b
-
 -- The data runs in rows
-data StdBoard = StdBoard { _stdFields :: [Int] } deriving (Eq, Ord)
+data Board = StdBoard { getFields :: [Int] }
+             | BWBoard { getColors :: [Color]
+                         , getFields :: [Int]
+                         } deriving (Eq, Ord)
 
-instance Board StdBoard where
-    getDimensions _ = (3,3)
-    hasGameEnded (StdBoard (x:xs)) = all (==x) xs
-    getFields = _stdFields
-    updateBoard pos board =
-        board { _stdFields = bumpVal $ getFields board }
+getDimensions :: Board -> Dimensions
+getDimensions _ = (3,3)
+
+hasGameEnded :: Board -> Bool
+hasGameEnded b = all (==x) xs
+    where (x:xs) = getFields b
+
+updateBoard :: Position -> Board -> Board
+updateBoard pos board =
+    board { getFields = bumpVal $ getFields board }
+  where
+    idx = convertPosToIndex (getDimensions board) pos
+    -- TODO: Surely, there must be a better way to do this
+    --       than using a lens.
+    bumpVal = case board of
+              StdBoard _ -> (& element idx +~ 1)
+              BWBoard colrs _ -> case colrs !! idx of
+                                 W -> (& element idx +~ 1)
+                                 B-> (& element idx -~ 1)
+
+boardHeuristic :: Board -> Int
+boardHeuristic b = negate . sum $ map diffFn fields
+  where
+    diffFn = subtract $ maximum fields
+    fields = getFields b
+
+instance Show Board where
+    show b = unlines . map show $ chunksOf y xs
       where
-        -- TODO: Surely, there must be a better way to do this
-        --       than using a lens.
-        bumpVal = (& element idx +~ 1)
-        idx = convertPosToIndex (getDimensions board) pos
+        xs = getFields b
+        (_,y) = getDimensions b
 
-instance Show StdBoard where
-    show b@(StdBoard xs) = unlines . map show $ chunksOf y xs
-      where (_,y) = getDimensions b
-
-data BWBoard = BWBoard { getColors :: [Color]
-                       , _bwFields :: [Int]
-                       } deriving (Eq, Ord)
-
-instance Board BWBoard where
-    getDimensions _ = (3,3)
-    hasGameEnded (BWBoard _ (x:xs)) = all (==x) xs
-    getFields = _bwFields
-    updateBoard pos board =
-        board { _bwFields = bumpVal $ getFields board }
-      where
-        bumpVal = case getColors board !! idx of
-            White -> (& element idx +~ 1)
-            Black -> (& element idx -~ 1)
-        idx = convertPosToIndex (getDimensions board) pos
-
-
-data GameState a = GameState { position :: Position
-                             , getBoard :: a
+data GameState = GameState { position :: Position
+                             , getBoard :: Board
                              } deriving (Show, Eq, Ord)
 
-applyDirection :: Board a => Direction -> GameState a -> Maybe (GameState a)
+applyDirection :: Direction -> GameState -> Maybe GameState
 applyDirection dir (GameState pos board) = do
     newPos <- updatePosition (getDimensions board) dir pos
     let newBoard = updateBoard newPos board
@@ -101,10 +92,10 @@ validatePosition (dimX, dimY) (x, y)
     | x < 0 || x >= dimX || y < 0 || y >= dimY= Nothing
     | otherwise = Just (x, y)
 
-findNeighbours :: Board a => GameState a -> [GameState a]
+findNeighbours :: GameState -> [GameState]
 findNeighbours gs = catMaybes $ applyDirection <$> [U .. R] <*> [gs]
 
-findCompletionPath :: (Ord a, Board a) => GameState a -> Maybe [GameState a]
+findCompletionPath :: GameState -> Maybe [GameState]
 findCompletionPath gs = liftA2 (:) (pure gs)
     $ aStar (S.fromList . findNeighbours)
             (const . const 1)
@@ -112,7 +103,7 @@ findCompletionPath gs = liftA2 (:) (pure gs)
             (hasGameEnded . getBoard)
             gs
 
-findChoosenPath :: Maybe [GameState a] -> Maybe [Direction]
+findChoosenPath :: Maybe [GameState] -> Maybe [Direction]
 findChoosenPath Nothing = Nothing
 findChoosenPath (Just gs) = Just $ zipWith findUsedDirection ps (tail ps)
-  where ps = map position gs
+    where ps = map position gs
