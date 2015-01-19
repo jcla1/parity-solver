@@ -15,7 +15,7 @@ import qualified Data.Set as S
 data Direction = U | D | L | R
     deriving (Show, Read, Eq, Enum)
 
-data Color = White | Black
+data Color = W | B
     deriving (Show, Read, Eq, Ord)
 
 -- (0, 0) is the top left of the board
