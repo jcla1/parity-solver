@@ -1,13 +1,12 @@
 module Main where
 
-import Control.Applicative
 import qualified Data.ByteString.Lazy.Char8 as BS
-import Data.Maybe (fromJust)
+import           Data.Maybe                 (fromJust)
 
-import Data.Aeson (decode)
+import           Data.Aeson                 (decode)
 
-import LevelParser
-import ParitySolver
+import           LevelParser
+import           ParitySolver
 
 main :: IO ()
 main = do

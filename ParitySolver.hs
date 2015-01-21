@@ -4,12 +4,12 @@
 -- Feedback would be greatly appreciated!
 module ParitySolver where
 
-import Control.Applicative
-import Control.Lens
-import Data.Graph.AStar
-import Data.List.Split
-import Data.Maybe
-import qualified Data.Set as S
+import           Control.Applicative
+import           Control.Lens
+import           Data.Graph.AStar
+import           Data.List.Split
+import           Data.Maybe
+import qualified Data.Set            as S
 
 data Direction = U | D | L | R
     deriving (Show, Read, Eq, Ord, Enum)
@@ -24,8 +24,8 @@ type Dimensions = (Int, Int)
 -- The data runs in rows
 data Board = StdBoard { getFields :: [Int] }
              | BWBoard { getColors :: [Color]
-                         , getFields :: [Int]
-                         } deriving (Eq, Ord)
+                       , getFields :: [Int]
+                       } deriving (Eq, Ord)
 
 getDimensions :: Board -> Dimensions
 getDimensions _ = (3,3)
@@ -60,8 +60,8 @@ instance Show Board where
         (_,y) = getDimensions b
 
 data GameState = GameState { position :: Position
-                             , getBoard :: Board
-                             } deriving (Show, Eq, Ord)
+                           , getBoard :: Board
+                           } deriving (Show, Eq, Ord)
 
 applyDirection :: Direction -> GameState -> Maybe GameState
 applyDirection dir (GameState pos board) = do
